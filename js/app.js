@@ -8,14 +8,18 @@
 (function () {
   'use strict';
 
-  // ==========================================
-  // 全局配置 (可根据你的实际 GitHub 仓库修改)
-  // ==========================================
+  // =========================================================================
+  // 【站长配置中心】请在此处填写你的收录接收邮箱（修改后推送到 GitHub 即可生效）：
+  // =========================================================================
   const CONFIG = {
     // 自动加载的 Excel 文件相对路径 (推送到 GitHub 仓库即可自动拉取)
     excelUrl: './data.xlsx',
-    // 你的 GitHub 仓库地址 (访客点击“提交收录”时将自动跳转到此处创建 Issue)
-    // 部署到你的 GitHub Pages 后，请将此处改为你的真实仓库地址，例如：'https://github.com/myname/shuangxiu'
+
+    // ★★★【请在此填写你的接收邮箱】★★★ 
+    // 访客点击“一键发送邮件”或“复制邮箱”时将使用此地址，例如：'your_email@qq.com'
+    adminEmail: '2807400565@qq.com',
+
+    // 你的 GitHub 仓库地址 (可选备用)
     githubRepoUrl: 'https://github.com/qx2807/shuangxiu'
   };
 
@@ -260,12 +264,15 @@
     addCompanyForm: document.getElementById('addCompanyForm'),
     btnCancelAdd: document.getElementById('btnCancelAdd'),
 
-    // 永久存档与开源收录弹窗
+    // 永久存档与邮箱收录弹窗
     archiveModal: document.getElementById('archiveModal'),
     archiveModalClose: document.getElementById('archiveModalClose'),
     archivePreviewCode: document.getElementById('archivePreviewCode'),
-    btnSubmitGithubIssue: document.getElementById('btnSubmitGithubIssue'),
+    btnSendEmail: document.getElementById('btnSendEmail'),
+    btnCopyAdminEmail: document.getElementById('btnCopyAdminEmail'),
+    displayAdminEmail: document.getElementById('displayAdminEmail'),
     btnCopyArchiveText: document.getElementById('btnCopyArchiveText'),
+    btnSubmitGithubIssue: document.getElementById('btnSubmitGithubIssue'),
 
     // Toast
     toastContainer: document.getElementById('toastContainer')
@@ -1082,32 +1089,39 @@
   }
 
   /**
-   * 打开永久存档与 GitHub 提交指引弹窗
+   * 打开永久存档与邮箱收录指引弹窗
    */
   function showArchiveGuidanceModal(company) {
     state.lastAddedCompany = company;
 
-    // 格式化为 Markdown 提交模板
-    const reviewsMd = (company.reviews || []).map((r, i) => `${i + 1}. ${r}`).join('\n');
-    const issueBody = `### 🏢 企业基本信息
-- **公司名称**：${company.name}
-- **作息制度**：${company.scheduleType}
-- **工作时间**：${company.workingHours}
-- **所属行业**：${company.industry}
+    // 格式化为规范的邮件正文
+    const reviewsText = (company.reviews || []).map((r, i) => `${i + 1}. ${r}`).join('\n');
+    const emailSubject = `【企业作息与评价收录申请】${company.name} - ${company.scheduleType}`;
+    const emailBody = `站长你好，我在网页上提交了一家企业的作息制度与真实评价，申请永久收录到 data.xlsx：
 
-### 💬 员工真实评价 / 口碑反馈
-${reviewsMd || '暂无评价'}
+【公司名称】：${company.name}
+【作息制度】：${company.scheduleType}
+【工作时间】：${company.workingHours}
+【所属行业】：${company.industry}
 
----
-*来自网页访客录入提交，请管理员核实后并入 data.xlsx 永久归档*`;
+【真实员工评价】：
+${reviewsText || '暂无评价'}
 
-    elements.archivePreviewCode.textContent = issueBody;
+--------------------------------------------------
+（来自“职场作息罗盘”网页访客录入，请站长核实后加入 data.xlsx 归档，谢谢！）`;
 
-    // 设置 GitHub Issue 快捷链接
-    const issueTitle = `【企业录入申请】${company.name} - ${company.scheduleType}`;
+    elements.archivePreviewCode.textContent = emailBody;
+    elements.displayAdminEmail.textContent = CONFIG.adminEmail;
+
+    // 配置 mailto: 邮件唤起链接
+    elements.btnSendEmail.href = `mailto:${CONFIG.adminEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+    // 备用 GitHub Issue 快捷链接
     const targetRepo = CONFIG.githubRepoUrl.replace(/\/$/, '');
-    const issueUrl = `${targetRepo}/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
-    elements.btnSubmitGithubIssue.href = issueUrl;
+    const issueUrl = `${targetRepo}/issues/new?title=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    if (elements.btnSubmitGithubIssue) {
+      elements.btnSubmitGithubIssue.href = issueUrl;
+    }
 
     if (typeof elements.archiveModal.showModal === 'function') {
       elements.archiveModal.showModal();
@@ -1309,12 +1323,25 @@ ${reviewsMd || '暂无评价'}
       elements.archiveModal.close();
     });
 
-    // 复制归档文本
+    // 复制站长邮箱
+    elements.btnCopyAdminEmail.addEventListener('click', () => {
+      if (!CONFIG.adminEmail || CONFIG.adminEmail === 'your_email@example.com') {
+        showToast('站长尚未在 CONFIG.adminEmail 中配置邮箱，请先在 app.js 中填写！', 'error');
+        return;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(CONFIG.adminEmail).then(() => {
+          showToast(`已复制站长邮箱：${CONFIG.adminEmail}，可直接粘贴发送！`, 'success');
+        });
+      }
+    });
+
+    // 复制邮件正文
     elements.btnCopyArchiveText.addEventListener('click', () => {
       const code = elements.archivePreviewCode.textContent;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(code).then(() => {
-          showToast('已复制申请内容，可发送给管理员！', 'success');
+          showToast('已复制申请邮件正文，可直接粘贴到邮件中！', 'success');
         });
       }
     });
