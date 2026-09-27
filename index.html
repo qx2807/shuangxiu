@@ -359,40 +359,43 @@
     </div>
   </dialog>
 
-  <!-- 永久存档与开源收录指引弹窗 -->
+  <!-- 永久存档与邮箱收录指引弹窗 -->
   <dialog id="archiveModal" closedby="any" aria-labelledby="archiveModalTitle">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="archiveModalTitle">🎉 企业已在本地暂存生效！</h3>
+        <h3 class="modal-title" id="archiveModalTitle">🎉 企业已在本地暂存！申请全网收录</h3>
         <button id="archiveModalClose" class="modal-close-btn" title="关闭">✕</button>
       </div>
 
       <div class="archive-info-highlight">
-        <b>💡 关于静态网页永久存档的说明：</b><br>
-        本系统部署在 GitHub Pages 静态空间上。你刚才录入的信息已立即保存在<b>你当前的浏览器</b>中。<br>
-        若希望<b>全网所有访客都能永久看到</b>该企业，需要由管理员将其合并到仓库的 <code>data.xlsx</code> 中。
+        <b>💡 关于全网永久收录说明：</b><br>
+        本系统部署在 GitHub Pages 静态空间上。你刚才录入的信息已保存在<b>你当前的浏览器</b>中。<br>
+        若希望<b>全网所有访客都能看到</b>该企业，请点击下方按钮直接将申请发送至站长邮箱，站长审核后会将其合并入 <code>data.xlsx</code> 永久生效！
       </div>
 
       <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">
-        已为你自动生成标准的收录模板内容，推荐使用以下方式提交收录：
+        已自动为你生成规范的收录邮件内容：
       </p>
 
       <div class="code-preview-box" id="archivePreviewCode"></div>
 
-      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <a id="btnSubmitGithubIssue" class="btn btn-github" href="#" target="_blank" rel="noopener noreferrer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            🚀 一键前往 GitHub 提交 Issue 申请收录
+          <a id="btnSendEmail" class="btn btn-email" href="#" target="_blank">
+            📧 一键唤起邮件发送
           </a>
+          <button type="button" id="btnCopyAdminEmail" class="btn btn-outline">
+            ✉️ 复制站长邮箱 (<span id="displayAdminEmail">加载中...</span>)
+          </button>
           <button type="button" id="btnCopyArchiveText" class="btn btn-outline">
-            📋 复制收录文本给站长
+            📋 复制邮件正文
           </button>
         </div>
-        <div style="font-size: 0.78rem; color: var(--text-light);">
-          站长审核无误后，只需将此条目加入 <code>data.xlsx</code> 并推送到仓库，网页即永久全网同步更新！
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-light); flex-wrap: wrap; gap: 6px;">
+          <span>提示：使用 QQ / 163 等网页邮箱的同学，可直接复制邮箱和正文后发送</span>
+          <a id="btnSubmitGithubIssue" href="#" target="_blank" style="color: var(--text-muted); text-decoration: underline;">
+            有 GitHub 账号？也可通过 Issue 提交 »
+          </a>
         </div>
       </div>
     </div>
