@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业作息与评价查询平台 | 职场工时透明度指南</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+</head>
+<body>
+
+  <!-- 顶部导航栏 -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand-wrapper">
+        <div class="brand-icon">🏢</div>
+        <div>
+          <h1 class="brand-title">职场作息罗盘 · 企业工时与评价查询</h1>
+          <span class="brand-subtitle">关注打工人权益 · 真实作息透明化 · 避雷与求职指南</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button id="btnDownloadTemplate" class="btn btn-outline" title="下载标准Excel模板并在本地填写">
+          📥 下载Excel模板
+        </button>
+        <button id="btnExportExcel" class="btn btn-outline" title="将当前显示的所有数据导出为Excel表格">
+          📊 导出为Excel
+        </button>
+        <button id="btnAddCompany" class="btn btn-primary" title="在网页上直接录入新企业">
+          ➕ 录入企业
+        </button>
+        <button id="btnResetData" class="btn btn-subtle btn-sm" title="恢复系统预设的12家精选企业演示数据">
+          🔄 恢复示例
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主体容器 -->
+  <main class="main-container">
+
+    <!-- 自动同步状态指示横幅 -->
+    <section class="sync-banner" id="syncBanner">
+      <div class="sync-status-indicator">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncStatusText">正在检查仓库 data.xlsx 更新...</span>
+      </div>
+      <div class="sync-banner-actions">
+        <button id="btnReloadRemote" class="btn btn-outline btn-sm" title="重新从仓库拉取最新表格">
+          🔄 重新同步
+        </button>
+        <button id="btnToggleDropzone" class="btn btn-subtle btn-sm" title="展开/收起本地Excel临时导入">
+          📁 本地测试其他表格 ▾
+        </button>
+      </div>
+    </section>
+
+    <!-- Excel 文件上传拖拽区 (默认折叠，可按需展开临时导入测试) -->
+    <section class="dropzone-container hidden" id="dropzone" title="点击或拖拽上传Excel文件">
+      <input type="file" id="fileInput" class="dropzone-file-input" accept=".xlsx, .xls, .csv">
+      <div class="dropzone-inner">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <div class="dropzone-title">拖拽你的 Excel 数据表格到此处，或点击浏览选择文件</div>
+        <div class="dropzone-desc">支持 .xlsx、.xls、.csv 格式，内置表头智能识别（自动识别公司名、作息制度、工作时间、员工评价）</div>
+        <div class="dropzone-hints">
+          <span>💡 提示：同公司多条评价可在单元格内换行写入，或拆分为多行自动合并</span>
+          <span>·</span>
+          <span>📁 数据保存在当前浏览器本地，随时可导出</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 统计指标卡片区 -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-total">🏢</div>
+        <div class="stat-content">
+          <div class="stat-value" id="statTotalCompanies">0</div>
+          <div class="stat-label">收录企业总数</div>
+          <div class="stat-sub">多行业数据汇聚</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-green">🌿</div>
+        <div class="stat-content">
+          <div class="stat-value" id="statShuangxiuCount">0</div>
+          <div class="stat-label">正规双休企业</div>
+          <div class="stat-sub" id="statShuangxiuRatio">双休占比计算中</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-yellow">⚠️</div>
+        <div class="stat-content">
+          <div class="stat-value" id="statWarningCount">0</div>
+          <div class="stat-label">大小周 / 单休预警</div>
+          <div class="stat-sub">注意工时与身心平衡</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-comment">💬</div>
+        <div class="stat-content">
+          <div class="stat-value" id="statTotalReviews">0</div>
+          <div class="stat-label">收录真实员工评价</div>
+          <div class="stat-sub">真实反馈与口碑</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 搜索与多维筛选控制栏 -->
+    <section class="control-bar">
+      <!-- 搜索输入框 -->
+      <div class="search-row">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="搜索企业名称、上下班时间（如 965）、评价关键词（如 加班、WLB、食堂、年终奖、WFH）..."
+            autocomplete="off"
+          >
+          <button id="searchClearBtn" class="search-clear-btn" title="清空搜索">✕</button>
+        </div>
+      </div>
+
+      <!-- 快捷标签过滤与视图切换 -->
+      <div class="filter-row">
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter="all">
+            全部企业 <span class="chip-count">0</span>
+          </button>
+          <button class="filter-chip" data-filter="shuangxiu">
+            🟢 严格/弹性双休 <span class="chip-count">0</span>
+          </button>
+          <button class="filter-chip" data-filter="daxiaozhou">
+            🟡 大小周 <span class="chip-count">0</span>
+          </button>
+          <button class="filter-chip" data-filter="danxiu">
+            🔴 单休/996 <span class="chip-count">0</span>
+          </button>
+          <button class="filter-chip" data-filter="flexible">
+            ✨ 弹性工时/居家 <span class="chip-count">0</span>
+          </button>
+        </div>
+
+        <div class="view-and-sort">
+          <select id="sortSelect" class="sort-select" title="选择排序方式">
+            <option value="default">默认排列</option>
+            <option value="reviews-desc">评价条数从多到少</option>
+            <option value="name-asc">企业名称拼音 (A-Z)</option>
+          </select>
+
+          <div class="view-toggle">
+            <button id="btnViewCard" class="view-btn active" title="卡片视图">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button id="btnViewTable" class="view-btn" title="表格视图">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结果统计提示行 -->
+    <div class="results-summary-bar">
+      <div class="results-count">
+        当前展示 <b><span id="resultsCount">0</span></b> 家企业
+      </div>
+      <div>实时数据驱动 · 支持在详情页追加员工真实评价</div>
+    </div>
+
+    <!-- 卡片网格展示区域 -->
+    <section class="cards-grid" id="cardsContainer"></section>
+
+    <!-- 表格展示区域 -->
+    <section class="table-view-container" id="tableViewContainer">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th>企业名称</th>
+            <th>作息制度</th>
+            <th>上下班时间</th>
+            <th>行业领域</th>
+            <th>最新评价摘要</th>
+            <th style="width: 110px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- 空状态提示 -->
+    <section class="empty-state" id="emptyState">
+      <div class="empty-icon">🔍</div>
+      <h3 class="empty-title">没有找到匹配的企业信息</h3>
+      <p class="empty-desc">尝试调整搜索关键词，或切换上方作息类型筛选标签。你也可以点击上方“录入企业”手动添加新数据，或上传 Excel 表格。</p>
+      <button class="btn btn-outline" onclick="document.getElementById('searchClearBtn').click()">清空搜索条件</button>
+    </section>
+
+  </main>
+
+  <!-- 企业详情与全部评价弹窗 (原生 dialog 支持 closedby="any") -->
+  <dialog id="detailModal" closedby="any" aria-labelledby="detailCompanyName">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🏢</span>
+          <span id="detailCompanyName">企业详情</span>
+        </div>
+        <button id="detailModalClose" class="modal-close-btn" title="关闭弹窗">✕</button>
+      </div>
+
+      <!-- 企业核心信息卡片 -->
+      <div class="modal-company-info-card">
+        <div class="modal-info-grid">
+          <div class="modal-info-item">
+            <b>作息制度：</b>
+            <span id="detailBadge" class="badge"></span>
+          </div>
+          <div class="modal-info-item">
+            <b>工作时间：</b>
+            <span id="detailHours">-</span>
+          </div>
+          <div class="modal-info-item">
+            <b>所属领域：</b>
+            <span id="detailIndustry">-</span>
+          </div>
+          <div class="modal-info-item">
+            <b>评价总计：</b>
+            <span id="detailReviewCount">0 条</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 全部评价条目卡片 -->
+      <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--text-main);">
+        💬 真实员工评价列表
+      </h4>
+      <div class="modal-reviews-list" id="detailReviewsList"></div>
+
+      <!-- 为此企业追加新评价 -->
+      <div class="add-review-section">
+        <div class="add-review-title">✍️ 为该企业补充新评价</div>
+        <textarea
+          id="detailNewReviewText"
+          class="add-review-textarea"
+          placeholder="分享你的真实体验（如工作强度、加班费、假期落实、领导风格、食堂福利等）..."
+        ></textarea>
+        <div style="display: flex; justify-content: flex-end;">
+          <button id="btnSubmitDetailReview" class="btn btn-primary btn-sm">
+            提交新评价
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 手动录入新企业弹窗 -->
+  <dialog id="addModal" closedby="any" aria-labelledby="addModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="addModalTitle">➕ 录入新企业作息与评价</h3>
+        <button id="addModalClose" class="modal-close-btn" title="关闭">✕</button>
+      </div>
+
+      <form id="addCompanyForm">
+        <div class="form-group">
+          <label class="form-label" for="addCompanyName">
+            公司名称 <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="addCompanyName"
+            class="form-input"
+            placeholder="例如：微软中国、某外企研发中心、某互联网大厂"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addCompanySchedule">
+            作息制度 <span class="required">*</span>
+          </label>
+          <select id="addCompanySchedule" class="form-select" required>
+            <option value="严格双休">严格双休 (国家法定节假日，不加班)</option>
+            <option value="弹性双休">弹性双休 (周末双休，弹性打卡或支持远程)</option>
+            <option value="大小周">大小周 (隔周周六出勤)</option>
+            <option value="单休">单休 (固定周六出勤 / 996)</option>
+            <option value="视部门而定">视项目或部门而定</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addCompanyHours">
+            工作时间
+          </label>
+          <input
+            type="text"
+            id="addCompanyHours"
+            class="form-input"
+            placeholder="例如：09:30 - 18:30 (或 09:00 - 18:00)"
+          >
+          <div class="form-hint">提示：如有核心工作时间或弹性打卡，也可直接在此备注</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addCompanyIndustry">
+            行业类别
+          </label>
+          <input
+            type="text"
+            id="addCompanyIndustry"
+            class="form-input"
+            placeholder="例如：互联网 / 游戏 / 国企金融 / 外企软件"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addCompanyReviews">
+            员工评价 / 口碑反馈
+          </label>
+          <textarea
+            id="addCompanyReviews"
+            class="form-textarea"
+            rows="4"
+            placeholder="可以在此填写一条或多条评价。多条评价请直接回车换行写入即可，系统会自动解析为独立评价卡片。"
+          ></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" id="btnCancelAdd" class="btn btn-outline">取消</button>
+          <button type="submit" class="btn btn-primary">保存企业数据</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- 永久存档与开源收录指引弹窗 -->
+  <dialog id="archiveModal" closedby="any" aria-labelledby="archiveModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="archiveModalTitle">🎉 企业已在本地暂存生效！</h3>
+        <button id="archiveModalClose" class="modal-close-btn" title="关闭">✕</button>
+      </div>
+
+      <div class="archive-info-highlight">
+        <b>💡 关于静态网页永久存档的说明：</b><br>
+        本系统部署在 GitHub Pages 静态空间上。你刚才录入的信息已立即保存在<b>你当前的浏览器</b>中。<br>
+        若希望<b>全网所有访客都能永久看到</b>该企业，需要由管理员将其合并到仓库的 <code>data.xlsx</code> 中。
+      </div>
+
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">
+        已为你自动生成标准的收录模板内容，推荐使用以下方式提交收录：
+      </p>
+
+      <div class="code-preview-box" id="archivePreviewCode"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a id="btnSubmitGithubIssue" class="btn btn-github" href="#" target="_blank" rel="noopener noreferrer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            🚀 一键前往 GitHub 提交 Issue 申请收录
+          </a>
+          <button type="button" id="btnCopyArchiveText" class="btn btn-outline">
+            📋 复制收录文本给站长
+          </button>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-light);">
+          站长审核无误后，只需将此条目加入 <code>data.xlsx</code> 并推送到仓库，网页即永久全网同步更新！
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 浮动通知容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 引入 SheetJS (本地优先，CDN回退) -->
+  <script src="lib/xlsx.full.min.js"></script>
+  <script>
+    if (typeof XLSX === 'undefined') {
+      console.warn('本地 XLSX 库未就绪，正在尝试从 CDN 加载...');
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      document.head.appendChild(script);
+    }
+  </script>
+
+  <!-- 引入业务核心逻辑 -->
+  <script src="js/app.js"></script>
+</body>
+</html>
