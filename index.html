@@ -43,14 +43,14 @@
     <section class="sync-banner" id="syncBanner">
       <div class="sync-status-indicator">
         <span class="sync-dot" id="syncDot"></span>
-        <span id="syncStatusText">正在检查仓库 data.xlsx 更新...</span>
+        <span id="syncStatusText">正在检查数据更新...</span>
       </div>
       <div class="sync-banner-actions">
-        <button id="btnReloadRemote" class="btn btn-outline btn-sm" title="重新从仓库拉取最新表格">
+        <button id="btnReloadRemote" class="btn btn-outline btn-sm" title="重新从数据库拉取最新数据">
           🔄 重新同步
         </button>
-        <button id="btnToggleDropzone" class="btn btn-subtle btn-sm" title="展开/收起本地Excel临时导入">
-          📁 本地测试其他表格 ▾
+        <button id="btnToggleDropzone" class="btn btn-subtle btn-sm" title="展开/收起本地表格导入测试">
+          📁 本地导入测试 ▾
         </button>
       </div>
     </section>
@@ -363,36 +363,40 @@
   <dialog id="archiveModal" closedby="any" aria-labelledby="archiveModalTitle">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="archiveModalTitle">🎉 企业已在本地暂存！申请全网收录</h3>
+        <h3 class="modal-title" id="archiveModalTitle">🎉 内容已在本地展示！申请收录到本网站</h3>
         <button id="archiveModalClose" class="modal-close-btn" title="关闭">✕</button>
       </div>
 
-      <div class="archive-info-highlight">
-        <b>💡 关于全网永久收录说明：</b><br>
-        本系统部署在 GitHub Pages 静态空间上。你刚才录入的信息已保存在<b>你当前的浏览器</b>中。<br>
-        若希望<b>全网所有访客都能看到</b>该企业，请点击下方按钮直接将申请发送至站长邮箱，站长审核后会将其合并入 <code>data.xlsx</code> 永久生效！
+      <div class="archive-info-highlight" id="archiveModalDesc">
+        <b>💡 关于收录到本网站说明：</b><br>
+        你刚才提交的内容已保存在<b>当前浏览器本地界面</b>中。<br>
+        若希望<b>全网所有访客都能看到</b>，请复制下方内容发送至站长邮箱，站长审核后会将其收录到本网站永久展示！
       </div>
 
-      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">
-        已自动为你生成规范的收录邮件内容：
+      <div style="background: #f1f5f9; border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 0.85rem; color: #334155; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <span>📮 站长接收邮箱：</span>
+          <b style="color: var(--primary); font-size: 0.95rem;" id="displayAdminEmail">2807400565@qq.com</b>
+        </div>
+        <button type="button" id="btnCopyAdminEmail" class="btn btn-primary btn-sm">
+          ✉️ 复制站长邮箱
+        </button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+        📝 自动生成的申请邮件内容：
       </p>
 
       <div class="code-preview-box" id="archivePreviewCode"></div>
 
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <a id="btnSendEmail" class="btn btn-email" href="#" target="_blank">
-            📧 一键唤起邮件发送
-          </a>
-          <button type="button" id="btnCopyAdminEmail" class="btn btn-outline">
-            ✉️ 复制站长邮箱 (<span id="displayAdminEmail">加载中...</span>)
-          </button>
-          <button type="button" id="btnCopyArchiveText" class="btn btn-outline">
-            📋 复制邮件正文
+          <button type="button" id="btnCopyArchiveText" class="btn btn-primary" style="flex: 1;">
+            📋 复制申请正文内容
           </button>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-light); flex-wrap: wrap; gap: 6px;">
-          <span>提示：使用 QQ / 163 等网页邮箱的同学，可直接复制邮箱和正文后发送</span>
+          <span>操作指引：复制邮箱与正文后，打开你的 QQ邮箱 / 163邮箱 / 手机邮箱 发送即可</span>
           <a id="btnSubmitGithubIssue" href="#" target="_blank" style="color: var(--text-muted); text-decoration: underline;">
             有 GitHub 账号？也可通过 Issue 提交 »
           </a>

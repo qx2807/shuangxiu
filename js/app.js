@@ -266,9 +266,10 @@
 
     // 永久存档与邮箱收录弹窗
     archiveModal: document.getElementById('archiveModal'),
+    archiveModalTitle: document.getElementById('archiveModalTitle'),
+    archiveModalDesc: document.getElementById('archiveModalDesc'),
     archiveModalClose: document.getElementById('archiveModalClose'),
     archivePreviewCode: document.getElementById('archivePreviewCode'),
-    btnSendEmail: document.getElementById('btnSendEmail'),
     btnCopyAdminEmail: document.getElementById('btnCopyAdminEmail'),
     displayAdminEmail: document.getElementById('displayAdminEmail'),
     btnCopyArchiveText: document.getElementById('btnCopyArchiveText'),
@@ -287,15 +288,15 @@
     setupDialogDismissal(elements.addModal);
     setupDialogDismissal(elements.archiveModal);
 
-    // 优先尝试自动从仓库拉取最新的 data.xlsx
+    // 优先尝试自动从仓库拉取最新的数据
     await autoSyncExcelData();
   }
 
   /**
-   * 自动从远程/本地仓库拉取 data.xlsx
+   * 自动从远程/本地仓库拉取数据
    */
   async function autoSyncExcelData() {
-    updateSyncStatus('loading', '正在自动同步 data.xlsx 最新数据...');
+    updateSyncStatus('loading', '正在检查最新企业数据...');
 
     try {
       // 只有在 http: 或 https: 协议下尝试 fetch (如 GitHub Pages 或 本地 HTTP 服务)
@@ -315,20 +316,20 @@
         render();
 
         const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-        updateSyncStatus('success', `🟢 数据已与 data.xlsx 自动同步 (${parsedList.length} 家企业 · ${timeStr})`);
+        updateSyncStatus('success', `🟢 官方数据已实时同步 · 已收录 ${parsedList.length} 家企业 · ${timeStr}`);
         return;
       } else {
-        throw new Error('未能从 data.xlsx 解析到有效企业数据');
+        throw new Error('未能解析到有效企业数据');
       }
     } catch (err) {
-      console.warn('自动同步远程 data.xlsx 提示/失败:', err.message);
+      console.warn('自动同步数据提示/失败:', err.message);
 
       // 回退至本地数据
       loadFallbackData();
 
       // 判断是否是本地 file:// 协议
       if (window.location.protocol === 'file:') {
-        updateSyncStatus('warning', '📁 当前使用本地 file:// 协议浏览；上传至 GitHub Pages (https://) 后将全自动实时同步 data.xlsx！');
+        updateSyncStatus('warning', '📁 离线浏览模式 · 已载入本地数据；在线访问将全自动实时同步！');
       } else {
         updateSyncStatus('warning', `⚠️ 自动同步提示：${err.message || '已载入本地数据'}`);
       }
@@ -1090,14 +1091,43 @@
 
   /**
    * 打开永久存档与邮箱收录指引弹窗
+   * @param {'company'|'review'} type 提交类型
+   * @param {Object} company 企业对象
+   * @param {string} [extraText] 新增评价内容 (当 type === 'review' 时)
    */
-  function showArchiveGuidanceModal(company) {
+  function showArchiveGuidanceModal(type, company, extraText) {
     state.lastAddedCompany = company;
 
-    // 格式化为规范的邮件正文
-    const reviewsText = (company.reviews || []).map((r, i) => `${i + 1}. ${r}`).join('\n');
-    const emailSubject = `【企业作息与评价收录申请】${company.name} - ${company.scheduleType}`;
-    const emailBody = `站长你好，我在网页上提交了一家企业的作息制度与真实评价，申请永久收录到 data.xlsx：
+    let emailSubject = '';
+    let emailBody = '';
+
+    if (type === 'review') {
+      elements.archiveModalTitle.textContent = '💬 新评价已在本地展示！申请收录到本网站';
+      if (elements.archiveModalDesc) {
+        elements.archiveModalDesc.innerHTML = `<b>💡 关于收录到本网站说明：</b><br>你刚才为【${escapeHtml(company.name)}】补充的真实评价已在<b>当前浏览器界面</b>中生效。<br>若希望<b>全网所有访客都能看到</b>，请复制下方内容发送至站长邮箱，站长审核后会将其收录到本网站永久展示！`;
+      }
+
+      emailSubject = `【企业员工评价补充申请】${company.name}`;
+      emailBody = `站长你好，我为【${company.name}】补充了一条员工真实评价，申请收录到本网站：
+
+【企业名称】：${company.name}
+【作息制度】：${company.scheduleType}
+【工作时间】：${company.workingHours}
+
+【新增评价内容】：
+${extraText}
+
+--------------------------------------------------
+（来自“职场作息罗盘”网页访客提交，请站长核实后收录到本网站，谢谢！）`;
+    } else {
+      elements.archiveModalTitle.textContent = '🎉 企业信息已在本地展示！申请收录到本网站';
+      if (elements.archiveModalDesc) {
+        elements.archiveModalDesc.innerHTML = `<b>💡 关于收录到本网站说明：</b><br>你刚才录入的企业信息已保存在<b>当前浏览器本地界面</b>中。<br>若希望<b>全网所有访客都能看到</b>，请复制下方内容发送至站长邮箱，站长审核后会将其收录到本网站永久展示！`;
+      }
+
+      const reviewsText = (company.reviews || []).map((r, i) => `${i + 1}. ${r}`).join('\n');
+      emailSubject = `【企业作息与评价收录申请】${company.name} - ${company.scheduleType}`;
+      emailBody = `站长你好，我在网页上提交了一家企业的作息制度与评价信息，申请收录到本网站：
 
 【公司名称】：${company.name}
 【作息制度】：${company.scheduleType}
@@ -1108,18 +1138,18 @@
 ${reviewsText || '暂无评价'}
 
 --------------------------------------------------
-（来自“职场作息罗盘”网页访客录入，请站长核实后加入 data.xlsx 归档，谢谢！）`;
+（来自“职场作息罗盘”网页访客提交，请站长核实后收录到本网站，谢谢！）`;
+    }
 
     elements.archivePreviewCode.textContent = emailBody;
-    elements.displayAdminEmail.textContent = CONFIG.adminEmail;
-
-    // 配置 mailto: 邮件唤起链接
-    elements.btnSendEmail.href = `mailto:${CONFIG.adminEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    if (elements.displayAdminEmail) {
+      elements.displayAdminEmail.textContent = CONFIG.adminEmail;
+    }
 
     // 备用 GitHub Issue 快捷链接
-    const targetRepo = CONFIG.githubRepoUrl.replace(/\/$/, '');
-    const issueUrl = `${targetRepo}/issues/new?title=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
     if (elements.btnSubmitGithubIssue) {
+      const targetRepo = CONFIG.githubRepoUrl.replace(/\/$/, '');
+      const issueUrl = `${targetRepo}/issues/new?title=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
       elements.btnSubmitGithubIssue.href = issueUrl;
     }
 
@@ -1231,7 +1261,10 @@ ${reviewsText || '暂无评价'}
         renderDetailReviewsList(comp.reviews);
         elements.detailReviewCount.textContent = `${comp.reviews.length} 条`;
         elements.detailNewReviewText.value = '';
-        showToast('新评价已在本地成功追加！', 'success');
+        showToast('新评价已在本地成功展示！', 'success');
+
+        // 引导通过邮箱发送给站长收录到本网站
+        showArchiveGuidanceModal('review', comp, text);
       }
     });
 
@@ -1312,10 +1345,10 @@ ${reviewsText || '暂无评价'}
       render();
       elements.addModal.close();
 
-      showToast(`已在当前浏览器录入：${name}`, 'success');
+      showToast(`已在当前浏览器展示：${name}`, 'success');
 
-      // 2. 引导提交 GitHub Issue 永久存档
-      showArchiveGuidanceModal(newCompany);
+      // 2. 引导通过邮箱发送给站长收录到本网站
+      showArchiveGuidanceModal('company', newCompany);
     });
 
     // 归档弹窗关闭
